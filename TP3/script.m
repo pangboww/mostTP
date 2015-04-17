@@ -20,6 +20,8 @@ for i=1:length(lambda)
 end
 
 %------EX.345
+clear;
+clc;
 
 load test_tp.mat
 ind_pos = find(y == 1);
@@ -134,7 +136,6 @@ nb_sigma = length(sigma);
 B = 5;
 train_err = zeros(nb_lambda, nb_sigma);
 valid_err = zeros(nb_lambda, nb_sigma);
-%test_err  = zeros(nb_lambda, nb_sigma);
 
 for b = 1:B
     for ind_sigma = 1:nb_sigma
