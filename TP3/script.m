@@ -1,4 +1,6 @@
 %------EX.12
+clear;
+clc;
 lambda = 10.^(0:6);
 X = randn(1000, 100);
 y = sign(X(:, 1));
