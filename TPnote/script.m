@@ -52,7 +52,7 @@ clc;
 
 load('Yale_Faces.mat');
 
-[x_av, y_av, x_t, y_t] = split_data(X, Y, 0.8);
+[x_av, y_av, x_t, y_t] = split_data(X, Z, 0.8);
 
 K = 1:10;
 n_K = length(K);
@@ -98,39 +98,35 @@ clc;
 
 load('Yale_Faces.mat');
 
-[x_av, y_av, x_t, y_t] = split_data(X, Y, 0.8);
+class = 1:15;
+n_c = length(class);
+err_class = zeros(1,n_c);
 
-lambda = 10.^(-3:3);
-nb_lambda = length(lambda);
-sigma = 1:1:10;
-nb_sigma = length(sigma);
-B = 5;
-train_err = zeros(nb_lambda, nb_sigma);
-valid_err = zeros(nb_lambda, nb_sigma);
+for i = 1:n_c
+    groups = ismember(Y, i);
+    k=10;
+    cvFolds = crossvalind('Kfold', groups, k);   %# get indices of 10-fold CV
+    cp = classperf(groups);   %# init performance tracker
 
-for b = 1:B
-    for ind_sigma = 1:nb_sigma
-        [x_a, y_a, x_v, y_v] = split_data_fold_CV(x_av, y_av, B, b);
-        [k_a] = gram_matrix(x_a, x_a, 2, sigma(ind_sigma));
-        [k_v] = gram_matrix(x_a, x_v, 2, sigma(ind_sigma));
-        
-        for ind_lambda = 1:nb_lambda
-            mdl = fitcsvm(x_a,y_a,'Alpha',
-            
-            [alpha, c] = optimize_svm(k_a, y_a, lambda(ind_lambda));
-            y_a_pred = sign(alpha'*k_a+c); 
-%              [train_err(ind_lambda, ind_sigma)] = (1/B)*eval_erreur_classif(y_a_pred', y_a);
-            y_v_pred = sign(alpha'*k_v+c);
-%              [valid_err(ind_lambda, ind_sigma)] = (1/B)*eval_erreur_classif(y_v_pred', y_v);
-            conf_matrix_a = confusionmat(y_a,y_a_pred) ./ size(x_a, 1);
-            conf_matrix_v = confusionmat(y_v,y_a_pred) ./ size(x_v, 1);
-        
-            train_err(ind_lambda, ind_sigma) = 1 - sum(diag(conf_matrix_a));
-            valid_err(ind_lambda, ind_sigma) = 1 - sum(diag(conf_matrix_v));
+    for j = 1:k                                  %# for each fold
+        testIdx = (cvFolds == j);                %# get indices of test instances
+        trainIdx = ~testIdx;                     %# get indices training instances
 
-        end
+        %# train an SVM model over training instances
+        svmModel = svmtrain(X(trainIdx,:), groups(trainIdx), ...
+                     'Autoscale',true, 'Showplot',false, 'Method','QP', ...
+                     'BoxConstraint',2e-1, 'Kernel_Function','rbf', 'RBF_Sigma',1);
+
+        %# test using test instances
+        pred = svmclassify(svmModel, X(testIdx,:), 'Showplot',false);
+
+        %# evaluate and update performance object
+        cp = classperf(cp, pred, testIdx);
     end
+    
+    err_class(i) = cp.ErrorRate;
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%                             Boosting                                %%%
