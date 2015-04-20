@@ -118,7 +118,7 @@ for i = 1:n_c
                      'BoxConstraint',2e-1, 'Kernel_Function','rbf', 'RBF_Sigma',1);
 
         %# test using test instances
-        pred = svmclassify(svmModel, X(testIdx,:), 'Showplot',false);
+        pred = svmclassify(svmModel, X(testIdx,:), 'Showplot', false);
 
         %# evaluate and update performance object
         cp = classperf(cp, pred, testIdx);
@@ -133,6 +133,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%--------- Adaboost et arbres de decisions --------%
 clear;
 clc;
 
@@ -141,7 +142,7 @@ load('Yale_Faces.mat');
 [x_av, y_av, x_t, y_t] = split_data(X, Y, 0.8);
 [x_a, y_a, x_v, y_v] = split_data(x_av, y_av, 0.5);
 
-ratio = [4, 5, 10, 50];
+ratio = [1, 2, 3, 4, 5, 10, 50, 75, 100];
 param_L = size(x_a, 1) ./ ratio;
 for p = 1:length(param_L)
     L = param_L(p);
@@ -169,6 +170,15 @@ plot(ratio,erreur_valid,'go-'); hold on;
 plot(ratio,erreur_test,'rs-');
 
 
+%--------- Subspace et k plus proches voisins--------%
+clear;
+clc;
+
+load('Yale_Faces.mat');
+
+[x_av, y_av, x_t, y_t] = split_data(X, Y, 0.8);
+[x_a, y_a, x_v, y_v] = split_data(x_av, y_av, 0.5);
+
 param_K = (1:10);
 for p = 1:length(param_K)
     K = param_K(p);
@@ -193,11 +203,20 @@ end
 plot(param_K,erreur_train,'bx-'); hold on;
 plot(param_K,erreur_valid,'go-'); hold on;
 plot(param_K,erreur_test,'rs-');
+xlabel('Number of neighbers');
+ylabel('Classification error');
 
 
+%--------- Adaboost et Nombre d'apprenants par cycle --------%
+clear;
+clc;
+
+load('Yale_Faces.mat');
+
+[x_av, y_av, x_t, y_t] = split_data(X, Y, 0.8);
+[x_a, y_a, x_v, y_v] = split_data(x_av, y_av, 0.5);
 
 param_nl = [200, 500, 1000];
-
 for p = 1:length(param_nl)
     % Creqtion d'un modele pour un parametre nlear specifique
     method = 'AdaboostM2';
